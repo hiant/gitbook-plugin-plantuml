@@ -93,7 +93,6 @@ module.exports = {
     hooks: {
         "init": function() {
             config = this.options;
-            console.log(config);
         },
         // Before parsing markdown
         "page:before": processBlockList,
