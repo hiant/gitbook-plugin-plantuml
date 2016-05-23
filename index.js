@@ -46,7 +46,7 @@ function processBlockList(page, umlPath) {
             try {
                 execFile('java', [
                     //'-Dapple.awt.UIElement=true',
-                    '-jar', 'plantuml.jar',
+                    '-jar', 'node_modules/gitbook-plugin-plantuml/plantuml.jar',
                     //'-nbthread auto',
                     //'-tsvg',
                     '-charset', 'UTF-8',
