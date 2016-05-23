@@ -1,12 +1,14 @@
-var count = 0;
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var crypto = require('crypto');
+var path = require('path');
 
-function parseUml(page, umlPath) {
-    uml = page.content.match(/^```uml((.*\n)+?)?```$/igm);
+function parseUml(page, dirPath, umlPath) {
+    uml = page.content.match(/^```uml((.*[\r\n]+)+?)?```$/img);
+    // console.log(uml);
     if (uml) {
+        mkdirp.sync(path.dirname(umlPath));
         fs.writeFileSync(umlPath, uml);
         return true;
     }
@@ -78,32 +80,17 @@ module.exports = {
         "page:before": function(page) {
             // page.path is the path to the file
             // page.content is a string with the file markdown content
+            var basePath = '/images/uml/';
+            var dirPath = basePath + path.dirname(page.path);
+            var baseName = path.basename(page.path, '.md');
+            // console.log(dirPath);
+            var linkBase = dirPath + '/' + baseName;
+            // console.log(linkBase);
+            var umlPath = '.' + linkBase + '.uml';
 
-            var pathToken = page.path.split('/')
-
-            var chapterPath
-            var assetPath
-            var baseName
-            var umlPath
-
-            if (pathToken.length == 1) {
-                chapterPath = '.'
-                assetPath = './assets/images/uml/'
-                baseName = pathToken[0].split('.')[0]
-            }
-            else {
-                chapterPath = pathToken[0]
-                assetPath = '../assets/images/uml/' + chapterPath + '/'
-                baseName = pathToken[1].split('.')[0]
-            }
-
-            umlPath = './assets/images/uml/' + chapterPath + '/' + baseName + '.uml'
-
-            mkdirp.sync('./assets/images/uml/' + chapterPath);
-
-            var hasUml = parseUml(page, umlPath);
+            var hasUml = parseUml(page, dirPath, umlPath);
             if (!hasUml) { return page; }
-
+            
             console.log('processing uml... %j', page.path);
 
             var text = fs.readFileSync(umlPath, 'utf8');
@@ -131,11 +118,13 @@ module.exports = {
                 debugger;
                 try {
                     execFile('java', [
-                        '-Dapple.awt.UIElement=true',
+                        //'-Dapple.awt.UIElement=true',
                         '-jar',
                         'plantuml.jar',
-                        '-nbthread auto',
+                        //'-nbthread auto',
                         //'-tsvg',
+                        '-charset',
+                        'UTF-8',
                         umlPath,
                         '-o',
                         '.'
@@ -149,19 +138,19 @@ module.exports = {
                     line += '```';
                 }
                 if (i == 0) {
-                    page.content = page.content.replace(line, '![](' + assetPath + baseName + '.png)');
+                    page.content = page.content.replace(line, '![](' + linkBase + '.png)');
                     continue;
                 }
                 if (i < 10) {
-                    page.content = page.content.replace(line, '![](' + assetPath + baseName + '_00' + i + '.png)');
+                    page.content = page.content.replace(line, '![](' + linkBase + '_00' + i + '.png)');
                     continue;
                 }
                 if (i >= 10 && i < 100) {
-                    page.content = page.content.replace(line, '![](' + assetPath + baseName + '_0' + i + '.png)');
+                    page.content = page.content.replace(line, '![](' + linkBase + '_0' + i + '.png)');
                     continue;
                 }
                 if (i >= 100) {
-                    page.content = page.content.replace(line, '![](' + assetPath + baseName + '_' + i + '.png)');
+                    page.content = page.content.replace(line, '![](' + linkBase + '_' + i + '.png)');
                     continue;
                 }
             };
@@ -174,24 +163,6 @@ module.exports = {
 
         // Before html generation
         "page": function(page) {
-            // page.path is the path to the file
-            // page.sections is a list of parsed sections
-
-            // Example:
-            //page.sections.unshift({type: "normal", content: "<h1>Title</h1>"})
-
-            return page;
-        },
-
-        // After html generation
-        "page:after": function(page) {
-            // page.path is the path to the file
-            // page.content is a string with the html output
-
-            // Example:
-            //page.content = "<h1>Title</h1>\n" + page.content;
-            // -> This title will be added before the html tag so not visible in the browser
-
             return page;
         }
     }
