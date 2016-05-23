@@ -21,21 +21,25 @@ function processBlockList(page, umlPath) {
         var rawBlock = match[0];
         var blockContent = match[1];
         mkdirp.sync(path.dirname(umlPath));
-        fs.exists(umlPath, function(exists) {
-            if (!exists) {
-                fs.writeFileSync(umlPath, blockContent);
+        var isUpdateImageRequired = !fs.existsSync(umlPath);
+        var md5sum;
+        if (!isUpdateImageRequired) {
+            var lastmd5sum = '';
+            var sumPath = umlPath + '.sum';
+            if (fs.existsSync(sumPath)) {
+                try {
+                    lastmd5sum = fs.readFileSync(sumPath, encoding = 'utf-8');
+                } catch (e) {}
+                md5sum = crypto.createHash('sha1').update(blockContent).digest('hex');
+                isUpdateImageRequired = (lastmd5sum != md5sum);
+            } else {
+                isUpdateImageRequired = true;
             }
-        })
-        var lastmd5sum = ''
-        try {
-            lastmd5sum = fs.readFileSync(umlPath + '.sum');
-        } catch (e) {}
-        var md5sum = crypto.createHash('sha1').update(blockContent).digest('hex');
-        var isUpdateImageRequired = (lastmd5sum != md5sum);
+        }
         //UML
         if (isUpdateImageRequired) {
             fs.writeFileSync(umlPath, blockContent);
-            fs.writeFileSync(umlPath + '.sum', md5sum);
+            fs.writeFileSync(umlPath + '.sum', md5sum, encoding = 'utf-8');
             debugger;
             try {
                 execFile('java', [
@@ -88,10 +92,8 @@ module.exports = {
             "html:end": function() {
                 return "<!-- End of book " + this.options.title + " -->"
             },
-
             "head:start": "<!-- head:start -->",
             "head:end": "<!-- head:end -->",
-
             "body:start": "<!-- body:start -->",
             "body:end": "<!-- body:end -->"
         }
