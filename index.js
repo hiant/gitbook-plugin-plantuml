@@ -3,7 +3,7 @@ var fs = require('fs');
 var mkdirp = require('mkdirp');
 var crypto = require('crypto');
 var path = require('path');
-var blockRegex = /^```uml((.*[\r\n]+)+?)?```$/img;
+var blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
 
 function processBlockList(page, umlPath) {
     var basePath = '/images/uml/';
