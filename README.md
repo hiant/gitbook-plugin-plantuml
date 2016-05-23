@@ -52,7 +52,7 @@ or
 
 ***Additional requirements:***
 
- - Create a directory */assets/images/uml* in the root of your project.
+ - Create a directory */images/uml* in the root of your project.
  - [Install PlantUML.](http://www.plantuml.com/download.html) (Download plantuml.jar to root path)
 
 For Mac OS X users. Install *graphviz* package.
