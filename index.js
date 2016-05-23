@@ -3,7 +3,8 @@ var fs = require('fs');
 var mkdirp = require('mkdirp');
 var crypto = require('crypto');
 var path = require('path');
-var copyDir = require('copy-dir');
+var copyDir = require("copy-dir");
+var config;
 var blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
 var basePath = '/images/uml/';
 
@@ -92,12 +93,13 @@ module.exports = {
     hooks: {
         "init": function() {
             config = this.options;
+            console.log(config);
         },
         // Before parsing markdown
         "page:before": processBlockList,
         "finish": function() {
             // 最终写入索引数据
-            copyDir.sync('.' + basePath, output.root());
+            copyDir.sync('.' + basePath, path.join(config.output , './images/uml'));
         }
     }
 };
