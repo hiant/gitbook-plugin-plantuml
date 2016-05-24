@@ -15,9 +15,9 @@ function processBlockList(page, umlPath) {
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
         var assetsPathPrefix = basePath + dirPath + '/' + indexBaseName;
-        var linkPath = assetsPathPrefix + '.png';
+        var linkPath = '/' + assetsPathPrefix + '.png';
         var umlPath = './' + assetsPathPrefix + '.uml';
-        var pngPath = './' + linkPath;
+        var pngPath = '.' + linkPath;
         var rawBlock = match[0];
         var blockContent = match[1];
         var isUpdateImageRequired = !fs.existsSync(umlPath);
@@ -50,14 +50,14 @@ function processBlockList(page, umlPath) {
                     '-charset', 'UTF-8',
                     umlPath, '-o', '.'
                 ]);
-                fse.mkdirsSync(outputDir);
-                //console.log(outputDir + '/' + indexBaseName + '.png');
-                fse.copySync(pngPath, outputDir + '/' + indexBaseName + '.png');
             } catch (e) {
                 console.log(e);
             };
         }
         page.content = page.content.replace(rawBlock, '![](' + linkPath + ')');
+        fse.mkdirsSync(outputDir);
+        console.log(outputDir + '/' + indexBaseName + '.png');
+        fse.copySync(pngPath, outputDir + '/' + indexBaseName + '.png');
     }
     return page;
 }
