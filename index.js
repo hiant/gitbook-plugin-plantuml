@@ -5,16 +5,18 @@ const crypto = require('crypto');
 const path = require('path');
 const blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
 const basePath = 'images/uml/';
+const outputBasePath = '_book/images/uml/';
 
 function processBlockList(page, umlPath) {
     var dirPath = path.dirname(page.path);
     var baseName = path.basename(page.path, '.md');
-    var outputDir = '_book/images/uml/' + dirPath;
+    var umlDir = basePath + dirPath;
     var match;
     var index = 0;
+    var umlList = new Array();
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
-        var assetsPathPrefix = basePath + dirPath + '/' + indexBaseName;
+        var assetsPathPrefix = umlDir + '/' + indexBaseName;
         var linkPath = '/' + assetsPathPrefix + '.png';
         var umlPath = './' + assetsPathPrefix + '.uml';
         var pngPath = '.' + linkPath;
@@ -44,24 +46,22 @@ function processBlockList(page, umlPath) {
             fse.mkdirsSync(path.dirname(umlPath));
             fse.outputFileSync(umlPath, blockContent);
             fse.outputFileSync(umlPath + '.sum', md5sum, encoding = 'utf-8');
-            try {
-                execFileSync('java', [
-                    '-jar', 'node_modules/gitbook-plugin-plantuml/plantuml.jar',
-                    '-charset', 'UTF-8',
-                    umlPath, '-o', '.'
-                ]);
-            } catch (e) {
-                console.log(e);
-            };
+            umlList.push(umlPath);
         }
         page.content = page.content.replace(rawBlock, '![](' + linkPath + ')');
-        fse.mkdirsSync(outputDir);
-        console.log(outputDir + '/' + indexBaseName + '.png');
-        fse.copySync(pngPath, outputDir + '/' + indexBaseName + '.png');
     }
+    if (umlList.length > 0) {
+        try {
+            execFileSync('java', ['-jar', 'node_modules/gitbook-plugin-plantuml/plantuml.jar',
+                umlList
+            ]);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    fse.copySync(basePath, outputBasePath);
     return page;
 }
-
 module.exports = {
     hooks: {
         // Before parsing markdown
