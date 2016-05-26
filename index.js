@@ -1,29 +1,29 @@
-const execFileSync = require('child_process').execFileSync;
+const spawnSync = require('child_process').spawnSync;
 const fs = require('fs')
 const fse = require('fs-extra')
 const crypto = require('crypto');
 const path = require('path');
 const blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
-const basePath = 'images/uml/';
+const basePath = '.uml/';
+fse.mkdirsSync(basePath);
 const outputBasePath = '_book/images/uml/';
+const umlList = new Array();
 
 function processBlockList(page, umlPath) {
     var dirPath = path.dirname(page.path);
     var baseName = path.basename(page.path, '.md');
-    var umlDir = basePath + dirPath;
     var match;
     var index = 0;
-    var umlList = new Array();
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
-        var assetsPathPrefix = umlDir + '/' + indexBaseName;
-        var linkPath = '/' + assetsPathPrefix + '.png';
-        var umlPath = './' + assetsPathPrefix + '.uml';
-        var pngPath = '.' + linkPath;
+        var assetsPathPrefix = basePath + dirPath + '/' + indexBaseName;
+        var linkPath = '/images/uml/' + dirPath + '/' + indexBaseName + '.png';
+        var umlPath = assetsPathPrefix + '.uml';
+        var pngPath = assetsPathPrefix + '.png';
         var rawBlock = match[0];
         var blockContent = match[1];
         var isUpdateImageRequired = !fs.existsSync(umlPath);
-        var md5sum;
+        var md5sum = crypto.createHash('sha1').update(blockContent).digest('hex');
         if (!isUpdateImageRequired) {
             var lastmd5sum = '';
             var sumPath = umlPath + '.sum';
@@ -31,7 +31,6 @@ function processBlockList(page, umlPath) {
                 try {
                     lastmd5sum = fs.readFileSync(sumPath, encoding = 'utf-8');
                 } catch (e) {}
-                md5sum = crypto.createHash('sha1').update(blockContent).digest('hex');
                 isUpdateImageRequired = (lastmd5sum != md5sum);
             } else {
                 isUpdateImageRequired = true;
@@ -50,21 +49,24 @@ function processBlockList(page, umlPath) {
         }
         page.content = page.content.replace(rawBlock, '![](' + linkPath + ')');
     }
-    if (umlList.length > 0) {
-        try {
-            execFileSync('java', ['-jar', 'node_modules/gitbook-plugin-plantuml/plantuml.jar',
-                umlList
-            ]);
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    fse.copySync(basePath, outputBasePath);
     return page;
 }
 module.exports = {
     hooks: {
         // Before parsing markdown
-        "page:before": processBlockList
+        "page:before": processBlockList,
+        "finish:before": function() {
+            if (umlList.length > 0) {
+                try {
+                    var exe = spawnSync('java', ['-jar', 'node_modules/gitbook-plugin-plantuml/plantuml.jar',
+                        umlList
+                    ]);
+                    console.log(exe.stdout.toString());
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+            fse.copySync(basePath, outputBasePath);
+        }
     }
 };
