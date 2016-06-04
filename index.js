@@ -17,7 +17,7 @@ function processBlockList(page, umlPath) {
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
         var assetsPathPrefix = basePath + dirPath + '/' + indexBaseName;
-        var linkPath = '/images/uml/' + dirPath + '/' + indexBaseName + '.png';
+        var linkPath = indexBaseName + '.png';
         var umlPath = assetsPathPrefix + '.uml';
         var pngPath = assetsPathPrefix + '.png';
         var rawBlock = match[0];
@@ -66,7 +66,22 @@ module.exports = {
                     console.log(e);
                 }
             }
-            fse.copySync(basePath, outputBasePath);
+            var walk = require('walk');
+            var options = {
+                listeners: {
+                    file: function(root, fileStats, next) {
+                        var umlPath = fileStats.name;
+                        console.log(umlPath);
+                        var pngPath = path.basename(umlPath, '.uml') + '.png';
+                        console.log(pngPath);
+                        fse.copySync(pngPath, outputBasePath)
+                    },
+                    errors: function(root, nodeStatsArray, next) {
+                        next();
+                    }
+                }
+            };
+            walker = walk.walkSync(".uml", options);
         }
     }
 };
