@@ -6,8 +6,9 @@ const path = require('path');
 const blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
 const basePath = '.uml/';
 fse.mkdirsSync(basePath);
-const outputBasePath = '_book/images/uml/';
+const outputBasePath = '_book/';
 const umlList = new Array();
+const pngMap = {};
 
 function processBlockList(page, umlPath) {
     var dirPath = path.dirname(page.path);
@@ -16,10 +17,13 @@ function processBlockList(page, umlPath) {
     var index = 0;
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
-        var assetsPathPrefix = basePath + dirPath + '/' + indexBaseName;
+        var relativePath = dirPath + '/' + indexBaseName;
+        var pngOutPath = outputBasePath + relativePath + '.png';
+        var assetsPathPrefix = basePath + relativePath;
         var linkPath = indexBaseName + '.png';
         var umlPath = assetsPathPrefix + '.uml';
         var pngPath = assetsPathPrefix + '.png';
+        pngMap[pngPath] = pngOutPath;
         var rawBlock = match[0];
         var blockContent = match[1];
         var isUpdateImageRequired = !fs.existsSync(umlPath);
@@ -66,22 +70,9 @@ module.exports = {
                     console.log(e);
                 }
             }
-            var walk = require('walk');
-            var options = {
-                listeners: {
-                    file: function(root, fileStats, next) {
-                        var umlPath = fileStats.name;
-                        console.log(umlPath);
-                        var pngPath = path.basename(umlPath, '.uml') + '.png';
-                        console.log(pngPath);
-                        fse.copySync(pngPath, outputBasePath)
-                    },
-                    errors: function(root, nodeStatsArray, next) {
-                        next();
-                    }
-                }
-            };
-            walker = walk.walkSync(".uml", options);
+            for(var pngPath in pngMap) {
+                fse.copySync(pngPath, pngMap[pngPath]);
+            }
         }
     }
 };
