@@ -6,7 +6,7 @@ const path = require('path');
 const blockRegex = /^```uml((.*[\r\n]+)+?)?```$/im;
 const basePath = '.uml/';
 fse.mkdirsSync(basePath);
-const outputBasePath = '_book/';
+var outputBasePath;
 const umlList = new Array();
 const pngMap = {};
 
@@ -57,6 +57,9 @@ function processBlockList(page, umlPath) {
 }
 module.exports = {
     hooks: {
+        "init": function() {
+            outputBasePath = this.output.root() + '/';
+        },
         // Before parsing markdown
         "page:before": processBlockList,
         "finish:before": function() {
