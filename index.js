@@ -18,11 +18,11 @@ function processBlockList(page, umlPath) {
     while ((match = blockRegex.exec(page.content))) {
         var indexBaseName = baseName + '_' + (index++);
         var relativePath = dirPath + '/' + indexBaseName;
-        var pngOutPath = outputBasePath + relativePath + '.png';
+        var pngOutPath = outputBasePath + relativePath + '.uml.png';
         var assetsPathPrefix = basePath + relativePath;
         var linkPath = indexBaseName + '.png';
         var umlPath = assetsPathPrefix + '.uml';
-        var pngPath = assetsPathPrefix + '.png';
+        var pngPath = umlPath + '.png';
         pngMap[pngPath] = pngOutPath;
         var rawBlock = match[0];
         var blockContent = match[1];
